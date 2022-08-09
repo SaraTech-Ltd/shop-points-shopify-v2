@@ -1,20 +1,17 @@
-import { Shopify } from "@shopify/shopify-api";
-import { gdprTopics } from "@shopify/shopify-api/dist/webhooks/registry.js";
+const { Shopify } = require('@shopify/shopify-api');
+const { gdprTopics } = require('@shopify/shopify-api/dist/webhooks/registry.js');
 
-import ensureBilling from "../helpers/ensure-billing.js";
-import topLevelAuthRedirect from "../helpers/top-level-auth-redirect.js";
+const { ensureBilling } = require('../helpers/ensure-billing.js');
+const topLevelAuthRedirect = require('../helpers/top-level-auth-redirect.js');
 
-export default function applyAuthMiddleware(
-  app,
-  { billing = { required: false } } = { billing: { required: false } }
-) {
-  app.get("/api/auth", async (req, res) => {
+module.exports = function applyAuthMiddleware(app, { billing = { required: false } }) {
+  app.get('/api/auth', async (req, res) => {
     if (!req.query.shop) {
       res.status(500);
-      return res.send("No shop provided");
+      return res.send('No shop provided');
     }
 
-    if (!req.signedCookies[app.get("top-level-oauth-cookie")]) {
+    if (!req.signedCookies[app.get('top-level-oauth-cookie')]) {
       return res.redirect(`/api/auth/toplevel?shop=${req.query.shop}`);
     }
 
@@ -22,45 +19,41 @@ export default function applyAuthMiddleware(
       req,
       res,
       req.query.shop,
-      "/api/auth/callback",
-      app.get("use-online-tokens")
+      '/api/auth/callback',
+      app.get('use-online-tokens'),
     );
 
     res.redirect(redirectUrl);
   });
 
-  app.get("/api/auth/toplevel", (req, res) => {
-    res.cookie(app.get("top-level-oauth-cookie"), "1", {
+  app.get('/api/auth/toplevel', (req, res) => {
+    res.cookie(app.get('top-level-oauth-cookie'), '1', {
       signed: true,
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: 'strict',
     });
 
-    res.set("Content-Type", "text/html");
+    res.set('Content-Type', 'text/html');
 
     res.send(
       topLevelAuthRedirect({
         apiKey: Shopify.Context.API_KEY,
         hostName: Shopify.Context.HOST_NAME,
         shop: req.query.shop,
-      })
+      }),
     );
   });
 
-  app.get("/api/auth/callback", async (req, res) => {
+  app.get('/api/auth/callback', async (req, res) => {
     try {
-      const session = await Shopify.Auth.validateAuthCallback(
-        req,
-        res,
-        req.query
-      );
+      const session = await Shopify.Auth.validateAuthCallback(req, res, req.query);
 
       const host = req.query.host;
       app.set(
-        "active-shopify-shops",
-        Object.assign(app.get("active-shopify-shops"), {
+        'active-shopify-shops',
+        Object.assign(app.get('active-shopify-shops'), {
           [session.shop]: session.scope,
-        })
+        }),
       );
 
       const responses = await Shopify.Webhooks.Registry.registerAll({
@@ -73,19 +66,14 @@ export default function applyAuthMiddleware(
         // To register the GDPR topics, please set the appropriate webhook endpoint in the
         // 'GDPR mandatory webhooks' section of 'App setup' in the Partners Dashboard.
         if (!response.success && !gdprTopics.includes(topic)) {
-          console.log(
-            `Failed to register ${topic} webhook: ${response.result.errors[0].message}`
-          );
+          console.log(`Failed to register ${topic} webhook: ${response.result.errors[0].message}`);
         }
       });
 
       // If billing is required, check if the store needs to be charged right away to minimize the number of redirects.
       let redirectUrl = `/?shop=${session.shop}&host=${host}`;
       if (billing.required) {
-        const [hasPayment, confirmationUrl] = await ensureBilling(
-          session,
-          billing
-        );
+        const [hasPayment, confirmationUrl] = await ensureBilling(session, billing);
 
         if (!hasPayment) {
           redirectUrl = confirmationUrl;
@@ -113,4 +101,4 @@ export default function applyAuthMiddleware(
       }
     }
   });
-}
+};

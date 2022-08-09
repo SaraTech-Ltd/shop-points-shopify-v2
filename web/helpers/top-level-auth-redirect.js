@@ -1,4 +1,4 @@
-export default function topLevelAuthRedirect({ apiKey, hostName, shop }) {
+module.exports = function topLevelAuthRedirect({ apiKey, hostName, shop }) {
   return `<!DOCTYPE html>
 <html>
   <head>
@@ -33,4 +33,4 @@ export default function topLevelAuthRedirect({ apiKey, hostName, shop }) {
   </head>
   <body></body>
 </html>`;
-}
+};

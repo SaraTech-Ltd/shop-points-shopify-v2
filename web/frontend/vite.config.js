@@ -5,7 +5,6 @@ import https from 'https';
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  console.log('SHOPIFY_API_SECRET: ', env);
   if (env.npm_lifecycle_event === 'build' && !env.CI && !env.SHOPIFY_API_KEY) {
     console.warn(
       '\nBuilding the frontend app without an API key. The frontend build will not run without an API key. Set the SHOPIFY_API_KEY environment variable when running the build command.\n',

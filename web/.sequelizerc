@@ -1,0 +1,10 @@
+const path = require('path');
+
+console.log('path: ', path.resolve('./config', 'sequelize-config.js'), process.env.NODE_ENV);
+
+module.exports = {
+  env: !process.env.NODE_ENV || process.env.NODE_ENV === 'local' ? 'development' : 'production',
+  config: path.resolve('./config', 'sequelize-config.js'),
+  'seeders-path': path.resolve('db', 'seeders'),
+  'migrations-path': path.resolve('db', 'migrations'),
+};

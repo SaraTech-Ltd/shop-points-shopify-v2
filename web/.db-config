@@ -1,0 +1,14 @@
+SHOPIFY_API_KEY="9fce250409edc24ca49ba1373c483de5"
+SHOPIFY_API_SECRET="7a33e7f1d86820987391306a9d097f2a"
+# HOST="http://52.192.61.7/"
+# HOST="https://0a01-37-111-224-59.ngrok.io"
+SCOPES=write_products
+SHOP="moltoapp.myshopify.com"
+PORT=3000
+DB_HOST=localhost
+DB_USER=moltoapp_master_user
+DB_PASSWORD=moltoapp_master
+DB_PORT=5432
+DB_NAME=moltoapp_db
+DB_DIALECT=postgres
+DB=Y
