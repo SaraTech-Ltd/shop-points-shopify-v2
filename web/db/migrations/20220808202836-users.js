@@ -16,7 +16,7 @@ module.exports = {
         primaryKey: true,
         allowNull: false,
       },
-      customer_id: {
+      shop_id: {
         type: Sequelize.STRING,
         allowNull: false,
       },
@@ -26,6 +26,10 @@ module.exports = {
         allowNull: false,
       },
       currency: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      shop: {
         type: DataTypes.STRING,
         allowNull: true,
       },

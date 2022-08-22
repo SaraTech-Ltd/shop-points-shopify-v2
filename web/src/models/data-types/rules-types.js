@@ -8,7 +8,7 @@ module.exports = {
     primaryKey: true,
     allowNull: false,
   },
-  user_id: {
+  userId: {
     type: Sequelize.UUID,
     references: {
       model: {
@@ -20,31 +20,31 @@ module.exports = {
     onDelete: 'cascade',
     allowNull: false,
   },
-  redemption_amount: {
+  redemptionAmount: {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 1,
   },
-  redemption_point: {
+  redemptionPoint: {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 1,
   },
-  expire_month: {
+  expireMonth: {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
-  fulfillment_delay: {
+  fulfillmentDelay: {
     type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: 7,
   },
-  created_at: {
+  createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
-  updated_at: {
+  updatedAt: {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW,

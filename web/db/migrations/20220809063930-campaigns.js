@@ -16,7 +16,7 @@ module.exports = {
         primaryKey: true,
         allowNull: false,
       },
-      userId: {
+      user_id: {
         type: Sequelize.UUID,
         references: {
           model: {
@@ -28,7 +28,7 @@ module.exports = {
         onDelete: 'cascade',
         allowNull: false,
       },
-      tireId: {
+      tire_id: {
         type: Sequelize.UUID,
         references: {
           model: {

@@ -16,7 +16,7 @@ module.exports = {
         primaryKey: true,
         allowNull: false,
       },
-      userId: {
+      user_id: {
         type: Sequelize.UUID,
         references: {
           model: {
@@ -43,6 +43,10 @@ module.exports = {
       status: {
         type: DataTypes.STRING,
         allowNull: false,
+      },
+      is_default: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
       },
       created_at: {
         type: DataTypes.DATE,

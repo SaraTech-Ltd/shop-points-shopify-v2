@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Provider } from '@shopify/app-bridge-react';
+import { Provider, useAppBridge } from '@shopify/app-bridge-react';
 import { Banner, Layout, Page } from '@shopify/polaris';
-
+import { getSessionToken } from '@shopify/app-bridge-utils';
 /**
  * A component to configure App Bridge.
  * @desc A thin wrapper around AppBridgeProvider that provides the following capabilities:
@@ -13,55 +13,55 @@ import { Banner, Layout, Page } from '@shopify/polaris';
  * See: https://shopify.dev/apps/tools/app-bridge/react-components
  */
 export function AppBridgeProvider({ children }) {
-	const location = useLocation();
-	const navigate = useNavigate();
-	const history = useMemo(
-		() => ({
-			replace: (path) => {
-				navigate(path, { replace: true });
-			},
-		}),
-		[navigate],
-	);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const history = useMemo(
+    () => ({
+      replace: (path) => {
+        navigate(path, { replace: true });
+      },
+    }),
+    [navigate],
+  );
 
-	const routerConfig = useMemo(() => ({ history, location }), [history, location]);
+  const routerConfig = useMemo(() => ({ history, location }), [history, location]);
 
-	// The host may be present initially, but later removed by navigation.
-	// By caching this in state, we ensure that the host is never lost.
-	// During the lifecycle of an app, these values should never be updated anyway.
-	// Using state in this way is preferable to useMemo.
-	// See: https://stackoverflow.com/questions/60482318/version-of-usememo-for-caching-a-value-that-will-never-change
-	const [appBridgeConfig] = useState(() => {
-		const host = new URLSearchParams(location.search).get('host') || window.__SHOPIFY_DEV_HOST;
-		window.__SHOPIFY_DEV_HOST = host;
+  // The host may be present initially, but later removed by navigation.
+  // By caching this in state, we ensure that the host is never lost.
+  // During the lifecycle of an app, these values should never be updated anyway.
+  // Using state in this way is preferable to useMemo.
+  // See: https://stackoverflow.com/questions/60482318/version-of-usememo-for-caching-a-value-that-will-never-change
+  const [appBridgeConfig] = useState(() => {
+    const host = new URLSearchParams(location.search).get('host') || window.__SHOPIFY_DEV_HOST;
+    window.__SHOPIFY_DEV_HOST = host;
 
-		return {
-			host,
-			apiKey: process.env.SHOPIFY_API_KEY,
-			forceRedirect: true,
-		};
-	});
+    return {
+      host,
+      apiKey: process.env.SHOPIFY_API_KEY,
+      forceRedirect: true,
+    };
+  });
 
-	if (!process.env.SHOPIFY_API_KEY) {
-		return (
-			<Page narrowWidth>
-				<Layout>
-					<Layout.Section>
-						<div style={{ marginTop: '100px' }}>
-							<Banner title="Missing Shopify API key" status="critical">
-								Your app is running without the SHOPIFY_API_KEY environment variable. Please ensure that it is set when
-								running or building your React app.
-							</Banner>
-						</div>
-					</Layout.Section>
-				</Layout>
-			</Page>
-		);
-	}
+  if (!process.env.SHOPIFY_API_KEY) {
+    return (
+      <Page narrowWidth>
+        <Layout>
+          <Layout.Section>
+            <div style={{ marginTop: '100px' }}>
+              <Banner title="Missing Shopify API key" status="critical">
+                Your app is running without the SHOPIFY_API_KEY environment variable. Please ensure that it is set when
+                running or building your React app.
+              </Banner>
+            </div>
+          </Layout.Section>
+        </Layout>
+      </Page>
+    );
+  }
 
-	return (
-		<Provider config={appBridgeConfig} router={routerConfig}>
-			{children}
-		</Provider>
-	);
+  return (
+    <Provider config={appBridgeConfig} router={routerConfig}>
+      {children}
+    </Provider>
+  );
 }

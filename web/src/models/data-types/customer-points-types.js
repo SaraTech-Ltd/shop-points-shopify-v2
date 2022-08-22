@@ -8,7 +8,7 @@ module.exports = {
     primaryKey: true,
     allowNull: false,
   },
-  user_id: {
+  userId: {
     type: Sequelize.UUID,
     references: {
       model: {
@@ -20,19 +20,19 @@ module.exports = {
     onDelete: 'cascade',
     allowNull: false,
   },
-  order_id: {
+  orderId: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  order_link: {
+  orderLink: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  fulfillment_status: {
+  fulfillmentStatus: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  point_status: {
+  pointStatus: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -40,16 +40,16 @@ module.exports = {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  expire_at: {
+  expireAt: {
     type: DataTypes.DATE,
     allowNull: true,
   },
-  created_at: {
+  createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
-  updated_at: {
+  updatedAt: {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW,

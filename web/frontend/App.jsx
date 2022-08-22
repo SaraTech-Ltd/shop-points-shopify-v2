@@ -2,9 +2,9 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import Routes from './Routes';
 import store from './store';
-
+import Notification from './components/Notification';
 import { AppBridgeProvider, GraphQLProvider, PolarisProvider } from './components';
-console.log('env:', import.meta.env);
+
 export default function App() {
   // Any .tsx or .jsx files in /pages will become a route
   // See documentation for <Routes /> for more info
@@ -17,6 +17,7 @@ export default function App() {
           <AppBridgeProvider>
             <GraphQLProvider>
               <Routes pages={pages} />
+              <Notification />
             </GraphQLProvider>
           </AppBridgeProvider>
         </PolarisProvider>

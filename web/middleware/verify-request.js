@@ -1,6 +1,6 @@
 const { Shopify } = require('@shopify/shopify-api');
 const { ensureBilling, ShopifyBillingError } = require('../helpers/ensure-billing.js');
-
+const { AccountController } = require('../src/controllers');
 const returnTopLevelRedirection = require('../helpers/return-top-level-redirection.js');
 
 const TEST_GRAPHQL_QUERY = `
@@ -22,6 +22,9 @@ module.exports = function verifyRequest(app, { billing = { required: false } }) 
     }
 
     if (session?.isActive()) {
+      req.session = session;
+      const user = await new AccountController(null).createAccount(session);
+      req.user = user;
       try {
         if (billing.required) {
           // The request to check billing status serves to validate that the access token is still valid.
@@ -36,6 +39,7 @@ module.exports = function verifyRequest(app, { billing = { required: false } }) 
           const client = new Shopify.Clients.Graphql(session.shop, session.accessToken);
           await client.query({ data: TEST_GRAPHQL_QUERY });
         }
+
         return next();
       } catch (e) {
         if (e instanceof Shopify.Errors.HttpResponseError && e.response.code === 401) {

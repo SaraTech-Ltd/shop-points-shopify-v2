@@ -16,10 +16,7 @@ const userTypes = {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  customerId: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
+
   planType: {
     type: DataTypes.ENUM('free', 'basic', 'pro', 'enterprise', 'unlimited'),
     defaultValue: 'free',
@@ -27,6 +24,14 @@ const userTypes = {
     // allowNull defaults to true
   },
   currency: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  shopId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  shop: {
     type: DataTypes.STRING,
     allowNull: true,
   },
@@ -40,11 +45,6 @@ const userTypes = {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
     allowNull: false,
-    // allowNull defaults to true
-  },
-  createdBy: {
-    type: Sequelize.UUID,
-    allowNull: true,
     // allowNull defaults to true
   },
   createdAt: {

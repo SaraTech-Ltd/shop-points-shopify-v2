@@ -4,6 +4,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 
 const applyAuthMiddleware = require('../middleware/auth.js');
+const Middleware = require('../middleware');
 const verifyRequest = require('../middleware/verify-request.js');
 const USE_ONLINE_TOKENS = true;
 const TOP_LEVEL_OAUTH_COOKIE = 'shopify_top_level_oauth';
@@ -70,6 +71,18 @@ async function createServer(
     }),
   );
 
+  app.use(Middleware.ErrorHandlerMiddleware);
+
+  app.get('/api/shop', async (req, res) => {
+    const session = await Shopify.Utils.loadCurrentSession(req, res, true);
+    const { Shop } = await import(`@shopify/shopify-api/dist/rest-resources/${Shopify.Context.API_VERSION}/index.js`);
+
+    const shopData = await Shop.all({
+      session: session,
+    });
+    res.status(200).send(shopData);
+  });
+
   app.get('/api/products-count', async (req, res) => {
     const session = await Shopify.Utils.loadCurrentSession(req, res, true);
     const { Product } = await import(
@@ -88,8 +101,9 @@ async function createServer(
       res.status(500).send(error.message);
     }
   });
-
   app.use(express.json());
+
+  app.use('/api', require('./routes'));
 
   app.use((req, res, next) => {
     const shop = req.query.shop;

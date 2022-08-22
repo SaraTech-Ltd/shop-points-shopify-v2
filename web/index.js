@@ -23,8 +23,8 @@ setupGDPRWebHooks('/api/webhooks');
 if (!isTest) {
   createServer().then(({ app }) =>
     app.listen(PORT, async () => {
-      console.log('working');
       await pluginInt({ rdsProxy: false });
+      console.info(`Server started on port http://localhost:${PORT}`);
     }),
   );
 }
