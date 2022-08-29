@@ -10,79 +10,46 @@ class TireController extends BaseController {
 
   async create() {
     const user = this.req.user;
-    const { name, amount, point, campaignName, campaignPoint } = this.req.body;
+    const { name, amount, point, campaignPoint } = this.req.body;
     const tire = await TiersModel.create({
       userId: user.id,
       name: name,
       amount: amount,
       point,
+      campaignPoint,
       status: STATUS.ACTIVE,
     });
 
-    if (!isEmpty(campaignPoint)) {
-      // create campaign
-      const campaign = await CampaignModel.create({
-        userId: user.id,
-        tireId: tire.id,
-        name: campaignName || 'Default',
-        point: campaignPoint,
-        status: STATUS.ACTIVE,
-      });
-      tire.campaignPoint = campaignPoint;
-      tire.campaignName = campaignName;
-      tire.campaignId = campaign.id;
-    }
     return { success: true, data: tire };
   }
 
   async getTire() {
     const { id } = this.req.params;
     const tire = await TiersModel.findOne({ where: { id } });
-    const campaign = await CampaignModel.findOne({ where: { tireId: id } });
-    tire.campaign = campaign;
     return tire;
   }
 
   async getTires() {
     const user = this.req.user;
     const tire = await TiersModel.findOne({ where: { userId: user.id, isDefault: true } });
-    const tires = await TiersModel.findAll({ where: { userId: user.id, isDefault: false } });
+    const tires = await TiersModel.findAll({
+      where: { userId: user.id, isDefault: false },
+      order: [['created_at', 'DESC']],
+    });
     return { default: tire, tires };
   }
 
   async update() {
     const { name, amount, point, campaignPoint } = this.req.body;
     const { id } = this.req.params;
-    const user = this.req.user;
     await TiersModel.update(
-      { name, amount, point },
+      { name, amount, point, campaignPoint },
       {
         where: {
           id,
         },
       },
     );
-    if (campaignPoint) {
-      const campaign = await CampaignModel.findOne({ where: { tireId: id } });
-      if (campaign) {
-        await CampaignModel.update(
-          { point: campaignPoint },
-          {
-            where: {
-              tireId: id,
-            },
-          },
-        );
-      } else {
-        await CampaignModel.create({
-          userId: user.id,
-          tireId: id,
-          name: 'Default',
-          point: campaignPoint,
-          status: STATUS.ACTIVE,
-        });
-      }
-    }
     return { success: true };
   }
 

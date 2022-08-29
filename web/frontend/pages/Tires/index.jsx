@@ -6,19 +6,20 @@ import {
   Heading,
   Grid,
   Button,
-  Tag,
   TextStyle,
   TextField,
   Select,
-  Stack,
-  ResourceList,
+  Spinner,
 } from '@shopify/polaris';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { TitleBar } from '@shopify/app-bridge-react';
 import styled from 'styled-components';
+import { useDispatch } from 'react-redux';
 import { Navbar, TireModal } from '../../components';
-import { fetchTiers } from '../../store/actions';
+import { fetchTiers, addNotification, deleteTire, updateSettings, fetchSettings } from '../../store/actions';
+import { useAppQuery, useAppMutation } from '../../hooks';
+import TierCard from '../../components/TierCard';
 
 const Wrapper = styled.div`
   .Polaris-Page {
@@ -35,18 +36,8 @@ const FlexSpaceBetween = styled.div`
   border-radius: 10px;
 `;
 
-const CardHeader = styled.div`
-  padding-right: 22px;
-  border-bottom: 1px solid var(--p-surface-hovered);
-`;
-
 const PageSubHeading = styled.div`
   padding-bottom: 10px;
-`;
-
-const TextRright = styled.div`
-  width: 100%;
-  text-align: right;
 `;
 
 const months = [
@@ -69,18 +60,30 @@ const monthLists = new Array(12).fill(0).map((i, n) => ({ label: `${++n} month${
 export default function TiresPage() {
   const [isTireModal, setTireModal] = useState(false);
   const [selectedTire, setSelectedTire] = useState(null);
-  const { default: defaultTire, tires, startDate, activityWindow, pickupPeriod } = useSelector((state) => state.tires);
+  const [deleting, setDeleting] = useState(null);
+  const dispatch = useDispatch();
+  const [postRequest] = useAppMutation();
+  const [updatedSettings, setUpdateSettings] = useState({});
 
   const {
-    refetch: refetchTiers,
-    isLoading: isLoadingTiers,
-    isRefetching: isRefetchinTiers,
-  } = useAppQuery({
+    tires: { default: defaultTire, tires },
+    settings,
+  } = useSelector((state) => state);
+
+  const { isLoading: isLoadingTiers } = useAppQuery({
     url: '/api/tier/all',
     reactQueryOptions: {
       onSuccess: (data) => {
-        console.log('load tiers on tier page', data);
         dispatch(fetchTiers(data));
+      },
+    },
+  });
+
+  const { isLoading: loadingSettings } = useAppQuery({
+    url: '/api/settings/all',
+    reactQueryOptions: {
+      onSuccess: (data) => {
+        dispatch(fetchSettings(data));
       },
     },
   });
@@ -98,15 +101,38 @@ export default function TiresPage() {
 
   const onStartDateChange = (baseKey, key) => (value) => {
     console.log('base: ', baseKey, key, value);
+    const prevSettings = settings[baseKey];
+    setUpdateSettings({ [key]: { ...prevSettings, [key]: value } });
+    dispatch(updateSettings({ baseKey: { ...prevSettings, [key]: value } }));
   };
 
-  const updateTireSettings = (key) => (value) => {
-    console.log('updateTireSettings: ', key, value);
+  const updateTireSettings = (baseKey, key) => (value) => {
+    console.log('updateTireSettings: ', baseKey, key, value);
+    const prevSettings = settings[baseKey];
+    setUpdateSettings({ [key]: { ...prevSettings, [key]: value } });
+    dispatch(updateSettings({ baseKey: { ...prevSettings, [key]: value } }));
   };
 
   const onUpdate = (tire) => () => {
     setSelectedTire({ ...tire });
     setTireModal(!isTireModal);
+  };
+
+  const onDelete = (tire) => async () => {
+    setDeleting(tire.id);
+    await postRequest(
+      { url: `/api/tier/delete/${tire.id}`, method: 'DELETE' },
+      {
+        onSuccess: async () => {
+          dispatch(deleteTire(tire.id));
+          setDeleting(null);
+          dispatch(addNotification({ message: 'Tire delete successfull!' }));
+        },
+        onError: async (data, context) => {
+          setDeleting(null);
+        },
+      },
+    );
   };
 
   return (
@@ -147,19 +173,24 @@ export default function TiresPage() {
                         </TextContainer>
                       </Grid.Cell>
                       <Grid.Cell columnSpan={{ xs: 3, md: 3, lg: 3, xl: 3 }}>
-                        <Select
-                          options={months}
-                          onChange={onStartDateChange('startDate', 'month')}
-                          value={startDate.month}
-                        />
+                        {loadingSettings && <Spinner accessibilityLabel="load-default-settings" size="large" />}
+                        {!loadingSettings && (
+                          <Select
+                            options={months}
+                            onChange={onStartDateChange('tiers', 'startMonth')}
+                            value={settings?.tiers?.startMonth}
+                          />
+                        )}
                       </Grid.Cell>
                       <Grid.Cell columnSpan={{ xs: 3, md: 3, lg: 3, xl: 3 }}>
-                        <TextField
-                          type="number"
-                          value={startDate.year}
-                          onChange={onStartDateChange('startDate', 'year')}
-                          autoComplete="off"
-                        />
+                        {!loadingSettings && (
+                          <TextField
+                            type="number"
+                            value={settings?.tiers?.startYear}
+                            onChange={onStartDateChange('tiers', 'startYear')}
+                            autoComplete="off"
+                          />
+                        )}
                       </Grid.Cell>
                     </Grid>
                   </Card.Section>
@@ -167,19 +198,19 @@ export default function TiresPage() {
                     <Grid>
                       <Grid.Cell columnSpan={{ xs: 6, md: 6, lg: 6, xl: 6 }}>
                         <TextContainer>
-                          <Heading>Start Date</Heading>
-                          <p>
-                            Set the starting month of your tier system. On the 1st of this month your tier system will
-                            activate.
-                          </p>
+                          <Heading>Activity Window</Heading>
+                          <p>Defines the duration over which order totals are summed for ranking up.</p>
                         </TextContainer>
                       </Grid.Cell>
                       <Grid.Cell columnSpan={{ xs: 6, md: 6, lg: 6, xl: 6 }}>
-                        <Select
-                          options={monthLists}
-                          onChange={updateTireSettings('startDate')}
-                          value={activityWindow}
-                        />
+                        {loadingSettings && <Spinner accessibilityLabel="load-default-settings" size="large" />}
+                        {!loadingSettings && (
+                          <Select
+                            options={monthLists}
+                            onChange={updateTireSettings('tiers', 'activityWindow')}
+                            value={settings?.tiers?.activityWindow}
+                          />
+                        )}
                       </Grid.Cell>
                     </Grid>
                   </Card.Section>
@@ -188,87 +219,52 @@ export default function TiresPage() {
                     <Grid>
                       <Grid.Cell columnSpan={{ xs: 6, md: 6, lg: 6, xl: 6 }}>
                         <TextContainer>
-                          <Heading>Start Date</Heading>
-                          <p>
-                            Set the starting month of your tier system. On the 1st of this month your tier system will
-                            activate.
-                          </p>
+                          <Heading>Rank Up Period</Heading>
+                          <p>Defines how much time will elapse between checking which tier your customers belong to.</p>
                         </TextContainer>
                       </Grid.Cell>
                       <Grid.Cell columnSpan={{ xs: 6, md: 6, lg: 6, xl: 6 }}>
-                        <Select
-                          options={monthLists}
-                          onChange={updateTireSettings('pickupPeriod')}
-                          value={pickupPeriod}
-                        />
+                        {loadingSettings && <Spinner accessibilityLabel="load-default-settings" size="large" />}
+                        {!loadingSettings && (
+                          <Select
+                            options={monthLists}
+                            onChange={updateTireSettings('tiers', 'period')}
+                            value={settings?.tiers?.period}
+                          />
+                        )}
                       </Grid.Cell>
                     </Grid>
                   </Card.Section>
                 </Card>
 
                 <Card sectioned title="Default">
-                  <FlexSpaceBetween>
-                    <TextContainer>
-                      <Heading>
-                        ¥{defaultTire?.amount || 100} = {defaultTire?.point || 1} point
-                      </Heading>
-                      <TextStyle variation="subdued">
-                        This is the default tier. Since all customers must belong in a tier, there are no entry
-                        requirements.
-                      </TextStyle>
-                    </TextContainer>
-                    <Button primary onClick={onEditDefaultTire}>
-                      Edit
-                    </Button>
-                  </FlexSpaceBetween>
+                  {isLoadingTiers && <Spinner accessibilityLabel="load-default-tier" size="large" />}
+                  {!isLoadingTiers && (
+                    <FlexSpaceBetween>
+                      <TextContainer>
+                        <Heading>
+                          ¥{defaultTire?.amount || 100} = {defaultTire?.point || 1} point
+                        </Heading>
+                        <TextStyle variation="subdued">
+                          This is the default tier. Since all customers must belong in a tier, there are no entry
+                          requirements.
+                        </TextStyle>
+                      </TextContainer>
+                      <Button primary onClick={onEditDefaultTire}>
+                        Edit
+                      </Button>
+                    </FlexSpaceBetween>
+                  )}
                 </Card>
 
-                <Card sectioned>
-                  <CardHeader>
-                    <Stack>
-                      <Stack.Item fill>
-                        <Heading>New Tier</Heading>
-                      </Stack.Item>
-                      <Stack.Item>
-                        <Button primary onClick={onTireModal}>
-                          Create
-                        </Button>
-                      </Stack.Item>
-                    </Stack>
-                  </CardHeader>
-
-                  <ResourceList
-                    resourceName={{ singular: 'update', plural: 'updates' }}
-                    items={tires}
-                    renderItem={(item) => {
-                      const { name, amount, point, campaignPoint = 0 } = item;
-                      return (
-                        <ResourceList.Item>
-                          <Stack distribution="fill">
-                            <Stack.Item>
-                              <Heading>{name}</Heading>
-                            </Stack.Item>
-                            <Stack.Item>
-                              <TextStyle>
-                                ¥{amount} = {point} point
-                              </TextStyle>
-                            </Stack.Item>
-                            <Stack.Item fill>
-                              <TextStyle>¥{campaignPoint} Point Rule</TextStyle>
-                            </Stack.Item>
-                            <Stack.Item>
-                              <TextRright>
-                                <Button primary onClick={onUpdate(item)}>
-                                  Edit
-                                </Button>
-                              </TextRright>
-                            </Stack.Item>
-                          </Stack>
-                        </ResourceList.Item>
-                      );
-                    }}
-                  />
-                </Card>
+                <TierCard
+                  onTireModal={onTireModal}
+                  tires={tires}
+                  loading={isLoadingTiers}
+                  deleting={deleting}
+                  onUpdate={onUpdate}
+                  onDelete={onDelete}
+                />
               </Layout.Section>
             </Layout>
           </Grid.Cell>

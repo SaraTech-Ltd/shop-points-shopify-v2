@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { validateRequest, validateParamsRequest } = require('../request-validator');
+const { validateRequest } = require('../request-validator');
 
 const tireCreateValidation = (req, res, next) => {
   const schema = Joi.object({
@@ -7,7 +7,6 @@ const tireCreateValidation = (req, res, next) => {
     amount: Joi.number().required(),
     point: Joi.number().required(),
     status: Joi.string().optional(),
-    campaignName: Joi.string().max(125).optional(),
     campaignPoint: Joi.number().optional(),
   });
   validateRequest(req, next, schema);

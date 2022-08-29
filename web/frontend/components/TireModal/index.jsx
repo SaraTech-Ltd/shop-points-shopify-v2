@@ -53,7 +53,7 @@ const TireModal = ({ onClose, active, title, tire = {}, isEdit = false }) => {
     apiRequest(
       { url: `/api/tier/create`, data: values },
       {
-        onSuccess: async (data) => {
+        onSuccess: async ({ data }) => {
           console.log('created: ', data);
           dispatch(addTire(data.data));
           dispatch(addNotification({ message: 'Tier create successfull!' }));
@@ -61,7 +61,7 @@ const TireModal = ({ onClose, active, title, tire = {}, isEdit = false }) => {
           onClose();
         },
         onError: async (data, context) => {
-          console.log('error: ', data, context);
+          console.log('tire create error: ', data, context);
           setSaving(false);
         },
       },

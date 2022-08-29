@@ -25,7 +25,7 @@ module.exports = {
     allowNull: false,
   },
   value: {
-    type: DataTypes.TEXT,
+    type: DataTypes.JSON,
     allowNull: false,
   },
   notes: {

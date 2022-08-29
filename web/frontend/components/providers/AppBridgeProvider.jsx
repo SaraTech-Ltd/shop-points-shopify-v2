@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Provider, useAppBridge } from '@shopify/app-bridge-react';
+import { Provider } from '@shopify/app-bridge-react';
 import { Banner, Layout, Page } from '@shopify/polaris';
-import { getSessionToken } from '@shopify/app-bridge-utils';
+
 /**
  * A component to configure App Bridge.
  * @desc A thin wrapper around AppBridgeProvider that provides the following capabilities:

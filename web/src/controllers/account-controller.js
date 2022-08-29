@@ -1,13 +1,14 @@
 const { Shopify } = require('@shopify/shopify-api');
 const _ = require('lodash');
 const { SHOP_QUERY } = require('../graphql-query');
-const { UserModel, RulesModel, TiersModel, CampaignModel } = require('../models');
+const { UserModel, RulesModel, TiersModel, CampaignModel, SettingsModel } = require('../models');
 const { RULES, STATUS } = require('../constants');
 
 class AccountController {
   async createAccount(session) {
     try {
       let user = await UserModel.findOne({ where: { shop: session.shop } });
+
       if (!user) {
         const client = new Shopify.Clients.Graphql(session.shop, session.accessToken);
         const {
@@ -24,6 +25,7 @@ class AccountController {
           });
           console.log('user register success!', user.id);
           await this.UserSeeds(user);
+          await this.CreateSettings(user);
         }
       } else {
         console.log(`Shop ${session.shop} registered`);
@@ -59,6 +61,32 @@ class AccountController {
       point: 0,
       status: STATUS.ACTIVE,
     });
+  }
+
+  async CreateSettings(user) {
+    const settings = [
+      {
+        key: 'tiers',
+        value: { startMonth: 7, startYear: 2022, activityWindow: 1, period: 1 },
+        userId: user.id,
+      },
+      {
+        key: 'app_settings',
+        value: { pointSystem: false, pointSystemDisplay: false },
+        userId: user.id,
+      },
+      {
+        key: 'widget_settings',
+        value: { enable: true, language: 'en' },
+        userId: user.id,
+      },
+      {
+        key: 'order_settings',
+        value: { draftOrder: true },
+        userId: user.id,
+      },
+    ];
+    await SettingsModel.bulkCreate(settings);
   }
 }
 

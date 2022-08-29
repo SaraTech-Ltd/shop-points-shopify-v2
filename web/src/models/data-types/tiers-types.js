@@ -32,6 +32,10 @@ module.exports = {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  campaignPoint: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   status: {
     type: DataTypes.STRING,
     allowNull: false,

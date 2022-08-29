@@ -34,7 +34,7 @@ export const useAppMutation = () => {
       });
   });
 
-  const { mutateAsync, ...mutationProps } = useMutation(async ({ url, data, method = 'POST' }) => {
+  const { mutateAsync, ...mutationProps } = useMutation(async ({ url, data = {}, method = 'POST' }) => {
     let response;
     if (method === 'PUT') {
       response = await instance.put(url, data);

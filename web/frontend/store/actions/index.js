@@ -10,9 +10,15 @@ export const updateTire = (data) => {
   return { type: TireTypes.UPDATE_TIRE, payload: data };
 };
 
+export const deleteTire = (id) => {
+  return { type: TireTypes.DELETE_TIRE, tireId: id };
+};
+
 export const updateTireSettings = (value) => ({ type: TireTypes.UPDATE_TIRE_SETTINGS, payload: value });
 
 export const updateSettings = (settings) => ({ type: SettingsTypes.UPDATE_SETTINGS, payload: settings });
+
+export const fetchSettings = (settings) => ({ type: SettingsTypes.FETCH_SETTINGS, payload: settings });
 
 export const removeNotification = (id) => ({ type: NotificationTypes.REMOVE_NOTIFICATION, payload: id });
 

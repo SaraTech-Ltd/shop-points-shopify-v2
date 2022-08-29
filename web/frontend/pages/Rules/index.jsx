@@ -9,21 +9,22 @@ import {
   Tag,
   TextStyle,
   TextField,
+  ButtonGroup,
   Stack,
   ResourceList,
 } from '@shopify/polaris';
 import { TitleBar } from '@shopify/app-bridge-react';
 import styled from 'styled-components';
 import { Navbar, TireModal } from '../../components';
-import { updateTireSettings, fetchTiers } from '../../store/actions';
+import { updateTireSettings, fetchTiers, addNotification, deleteTire } from '../../store/actions';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAppQuery } from '../../hooks';
 import { useEffect } from 'react';
 import SaveBar from '../../components/SaveBar';
 import { isEmpty, isEqual } from 'lodash';
-// import Request from '../../request';
 import { useAppMutation } from '../../hooks';
+import TierCard from '../../components/TierCard';
 
 const Wrapper = styled.div`
   .Polaris-Page {
@@ -40,17 +41,13 @@ const FlexSpaceBetween = styled.div`
   border-radius: 10px;
 `;
 
-const CardHeader = styled.div`
-  padding-right: 22px;
-  border-bottom: 1px solid var(--p-surface-hovered);
-`;
-
 const PageSubHeading = styled.div`
   padding-bottom: 10px;
 `;
 const TextRright = styled.div`
   width: 100%;
-  text-align: right;
+  display: flex;
+  justify-content: end;
 `;
 
 export default function RulesPage() {
@@ -59,11 +56,12 @@ export default function RulesPage() {
 
   const [isTouched, setTouched] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [postRequest] = useAppMutation();
 
   const [isDirty, setDirty] = useState(false);
-  const { default: defaultTire, tires, rules, loading } = useSelector((state) => state.tires);
+  const { default: defaultTire, tires, rules } = useSelector((state) => state.tires);
 
   const dispatch = useDispatch();
 
@@ -128,6 +126,23 @@ export default function RulesPage() {
     setTireModal(!isTireModal);
   };
 
+  const onDelete = (tire) => async () => {
+    setDeleting(true);
+    await postRequest(
+      { url: `/api/tier/delete/${tire.id}`, method: 'DELETE' },
+      {
+        onSuccess: async () => {
+          dispatch(deleteTire(tire.id));
+          setDeleting(false);
+          dispatch(addNotification({ message: 'Tire delete successfull!' }));
+        },
+        onError: async (data, context) => {
+          setDeleting(false);
+        },
+      },
+    );
+  };
+
   const onSave = async () => {
     // porform server side action
     setFetching(true);
@@ -154,7 +169,7 @@ export default function RulesPage() {
   };
 
   const { expireMonth, fulfillmentDelay, redemptionAmount, redemptionPoint } = rules;
-
+  console.log('tires: ', tires);
   return (
     <Wrapper>
       <Page fullWidth>
@@ -253,52 +268,14 @@ export default function RulesPage() {
                   </FlexSpaceBetween>
                 </Card>
 
-                <Card sectioned>
-                  <CardHeader>
-                    <Stack>
-                      <Stack.Item fill>
-                        <Heading>New Tier</Heading>
-                      </Stack.Item>
-                      <Stack.Item>
-                        <Button primary onClick={onTireModal}>
-                          Create
-                        </Button>
-                      </Stack.Item>
-                    </Stack>
-                  </CardHeader>
-
-                  <ResourceList
-                    resourceName={{ singular: 'update', plural: 'updates' }}
-                    items={tires}
-                    renderItem={(item) => {
-                      const { name, amount, point, campaignPoint } = item;
-                      return (
-                        <ResourceList.Item>
-                          <Stack distribution="fill">
-                            <Stack.Item>
-                              <Heading>{name}</Heading>
-                            </Stack.Item>
-                            <Stack.Item>
-                              <TextStyle>
-                                ¥{amount} = {point} point
-                              </TextStyle>
-                            </Stack.Item>
-                            <Stack.Item fill>
-                              <TextStyle>¥{campaignPoint || 0} Point Rule</TextStyle>
-                            </Stack.Item>
-                            <Stack.Item>
-                              <TextRright>
-                                <Button primary onClick={onUpdate(item)}>
-                                  Edit
-                                </Button>
-                              </TextRright>
-                            </Stack.Item>
-                          </Stack>
-                        </ResourceList.Item>
-                      );
-                    }}
-                  />
-                </Card>
+                <TierCard
+                  onTireModal={onTireModal}
+                  tires={tires}
+                  loading={isLoadingTiers}
+                  deleting={deleting}
+                  onUpdate={onUpdate}
+                  onDelete={onDelete}
+                />
                 {isDirty && <SaveBar onSaveAction={onSave} onDiscardAction={onDiscard} loading={fetching} />}
               </Layout.Section>
             </Layout>
