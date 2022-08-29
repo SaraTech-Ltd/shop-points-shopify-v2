@@ -32,7 +32,7 @@ module.exports = {
         type: Sequelize.UUID,
         references: {
           model: {
-            tableName: 'tires',
+            tableName: 'tiers',
           },
           key: 'id',
         },
