@@ -40,7 +40,7 @@ module.exports = {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      campaignPoint: {
+      campaign_point: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

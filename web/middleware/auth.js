@@ -22,7 +22,7 @@ module.exports = function applyAuthMiddleware(app, { billing = { required: false
       '/api/auth/callback',
       app.get('use-online-tokens'),
     );
-
+    console.log('redirect', redirectUrl, req.query.shop);
     res.redirect(redirectUrl);
   });
 

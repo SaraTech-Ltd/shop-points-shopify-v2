@@ -5,8 +5,15 @@ const { UserModel, RulesModel, TiersModel, CampaignModel, SettingsModel } = requ
 const { RULES, STATUS } = require('../constants');
 
 class AccountController {
+  constructor() {
+    this.processing = {};
+  }
   async createAccount(session) {
     try {
+      if (this.processing[session.shop] && this.processing[session.shop] !== 'completed') {
+        return null;
+      }
+      this.processing[session.shop] = 'seeding';
       let user = await UserModel.findOne({ where: { shop: session.shop } });
 
       if (!user) {
@@ -30,6 +37,9 @@ class AccountController {
       } else {
         console.log(`Shop ${session.shop} registered`);
       }
+
+      this.processing[session.shop] = 'completed';
+
       return user;
     } catch (err) {
       console.log('found guilty when create account: ', err);

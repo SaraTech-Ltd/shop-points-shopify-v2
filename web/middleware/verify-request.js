@@ -10,6 +10,8 @@ const TEST_GRAPHQL_QUERY = `
   }
 }`;
 
+const accountContoller = new AccountController();
+
 module.exports = function verifyRequest(app, { billing = { required: false } }) {
   return async (req, res, next) => {
     const session = await Shopify.Utils.loadCurrentSession(req, res, app.get('use-online-tokens'));
@@ -23,7 +25,7 @@ module.exports = function verifyRequest(app, { billing = { required: false } }) 
 
     if (session?.isActive()) {
       req.session = session;
-      const user = await new AccountController(null).createAccount(session);
+      const user = await accountContoller.createAccount(session);
       req.user = user;
       try {
         if (billing.required) {
