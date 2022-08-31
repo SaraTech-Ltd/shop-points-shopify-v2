@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { Shopify, ApiVersion } = require('@shopify/shopify-api');
 
-const DB_PATH = `${process.cwd()}/sqlite-db/database.sqlite`;
+const DB_PATH = `${process.cwd()}/database.sqlite`;
 const versionFilePath = '../version.txt';
 let templateVersion = 'unknown';
 if (fs.existsSync(versionFilePath)) {
