@@ -115,8 +115,7 @@ export default function RulesPage() {
     setSelectedTire(null);
   };
 
-  const onEditDefaultTire = (event) => {
-    event.preventDefault();
+  const onEditDefaultTire = () => {
     setSelectedTire({ ...defaultTire });
     setTireModal(!isTireModal);
   };

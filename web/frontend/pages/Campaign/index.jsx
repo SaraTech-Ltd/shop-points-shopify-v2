@@ -6,7 +6,6 @@ import {
   Heading,
   Grid,
   Button,
-  ButtonGroup,
   TextStyle,
   TextField,
   Select,
@@ -21,8 +20,6 @@ import { Navbar, TireModal } from '../../components';
 import { fetchTiers, addNotification, deleteTire, updateSettings, fetchSettings } from '../../store/actions';
 import { useAppQuery, useAppMutation } from '../../hooks';
 import TierCard from '../../components/TierCard';
-import { useEffect } from 'react';
-import { isEqual } from 'lodash';
 
 const Wrapper = styled.div`
   .Polaris-Page {
@@ -60,16 +57,13 @@ const months = [
 
 const monthLists = new Array(12).fill(0).map((i, n) => ({ label: `${++n} month${n > 1 ? 's' : ''}`, value: n }));
 
-export default function TiresPage() {
+export default function CampaignPage() {
   const [isTireModal, setTireModal] = useState(false);
   const [selectedTire, setSelectedTire] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const dispatch = useDispatch();
   const [postRequest] = useAppMutation();
-  const [currentSettings, setUpdateSettings] = useState({});
-  const [isDirty, setDirty] = useState(false);
-  const [touched, setTouched] = useState(false);
-  const [updating, setUpdateState] = useState(false);
+  const [updatedSettings, setUpdateSettings] = useState({});
 
   const {
     tires: { default: defaultTire, tires },
@@ -77,7 +71,7 @@ export default function TiresPage() {
   } = useSelector((state) => state);
 
   const { isLoading: isLoadingTiers } = useAppQuery({
-    url: '/api/tier/all',
+    url: '/api/campaign/all',
     reactQueryOptions: {
       onSuccess: (data) => {
         dispatch(fetchTiers(data));
@@ -85,26 +79,14 @@ export default function TiresPage() {
     },
   });
 
-  const { isLoading: loadingSettings, refetch: refetchSettings } = useAppQuery({
+  const { isLoading: loadingSettings } = useAppQuery({
     url: '/api/settings/all',
     reactQueryOptions: {
       onSuccess: (data) => {
-        console.log('settings loaded: ', data.tiers);
-        setUpdateSettings(data.tiers);
         dispatch(fetchSettings(data));
       },
     },
   });
-
-  useEffect(() => {
-    if (touched) {
-      if (isEqual(currentSettings, settings.tiers)) {
-        setDirty(false);
-      } else {
-        setDirty(true);
-      }
-    }
-  }, [settings.tiers]);
 
   const onTireModal = () => {
     setTireModal(!isTireModal);
@@ -116,10 +98,18 @@ export default function TiresPage() {
     setTireModal(!isTireModal);
   };
 
-  const updateTireSettings = (baseKey, key) => (value) => {
+  const onStartDateChange = (baseKey, key) => (value) => {
+    console.log('base: ', baseKey, key, value);
     const prevSettings = settings[baseKey];
-    setTouched(true);
-    dispatch(updateSettings({ key: baseKey, value: { ...prevSettings, [key]: Number(value) } }));
+    setUpdateSettings({ [key]: { ...prevSettings, [key]: value } });
+    dispatch(updateSettings({ baseKey: { ...prevSettings, [key]: value } }));
+  };
+
+  const updateTireSettings = (baseKey, key) => (value) => {
+    console.log('updateTireSettings: ', baseKey, key, value);
+    const prevSettings = settings[baseKey];
+    setUpdateSettings({ [key]: { ...prevSettings, [key]: value } });
+    dispatch(updateSettings({ baseKey: { ...prevSettings, [key]: value } }));
   };
 
   const onUpdate = (tire) => () => {
@@ -130,7 +120,7 @@ export default function TiresPage() {
   const onDelete = (tire) => async () => {
     setDeleting(tire.id);
     await postRequest(
-      { url: `/api/tier/delete/${tire.id}`, method: 'DELETE' },
+      { url: `/api/campaign/delete/${tire.id}`, method: 'DELETE' },
       {
         onSuccess: async () => {
           dispatch(deleteTire(tire.id));
@@ -143,33 +133,6 @@ export default function TiresPage() {
       },
     );
   };
-
-  const onSaveSettings = async () => {
-    setUpdateState(true);
-    await postRequest(
-      { url: `/api/settings/update`, data: { settings: JSON.stringify(settings) } },
-      {
-        onSuccess: async () => {
-          setDirty(false);
-          setTouched(false);
-          setUpdateState(false);
-          dispatch(addNotification({ message: 'Settings update successfull!' }));
-          await refetchSettings();
-        },
-        onError: async (data, context) => {
-          setUpdateState(false);
-        },
-      },
-    );
-  };
-
-  const onCancelSettings = () => {
-    setTouched(false);
-    setDirty(false);
-    dispatch(updateSettings({ key: 'tiers', value: currentSettings }));
-  };
-
-  console.log('settings: ', settings);
 
   return (
     <Wrapper>
@@ -191,17 +154,7 @@ export default function TiresPage() {
                     </p>
                   </PageSubHeading>
                 </TextContainer>
-                <Card sectioned>
-                  <Card.Header title="Tier System Settings">
-                    {isDirty && (
-                      <ButtonGroup>
-                        <Button onClick={onCancelSettings}>Cancel</Button>
-                        <Button primary loading={updating} onClick={onSaveSettings}>
-                          Save
-                        </Button>
-                      </ButtonGroup>
-                    )}
-                  </Card.Header>
+                <Card sectioned title="Tier System Settings">
                   <Card.Section>
                     <TextContainer>
                       <p>We will add chart later on!</p>
@@ -223,7 +176,7 @@ export default function TiresPage() {
                         {!loadingSettings && (
                           <Select
                             options={months}
-                            onChange={updateTireSettings('tiers', 'startMonth')}
+                            onChange={onStartDateChange('tiers', 'startMonth')}
                             value={settings?.tiers?.startMonth}
                           />
                         )}
@@ -233,7 +186,7 @@ export default function TiresPage() {
                           <TextField
                             type="number"
                             value={settings?.tiers?.startYear}
-                            onChange={updateTireSettings('tiers', 'startYear')}
+                            onChange={onStartDateChange('tiers', 'startYear')}
                             autoComplete="off"
                           />
                         )}
@@ -252,7 +205,7 @@ export default function TiresPage() {
                         {loadingSettings && <Spinner accessibilityLabel="load-default-settings" size="large" />}
                         {!loadingSettings && (
                           <Select
-                            options={[...monthLists, { label: 'No limit', value: -1 }]}
+                            options={monthLists}
                             onChange={updateTireSettings('tiers', 'activityWindow')}
                             value={settings?.tiers?.activityWindow}
                           />

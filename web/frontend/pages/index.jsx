@@ -170,9 +170,9 @@ const HomePage = () => {
                   />
                 </Card>
               </Layout.Section>
-              <Layout.Section>
+              {/* <Layout.Section>
                 <ProductsCard />
-              </Layout.Section>
+              </Layout.Section> */}
             </Layout>
           </Grid.Cell>
         </Grid>

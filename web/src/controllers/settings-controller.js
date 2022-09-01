@@ -30,7 +30,6 @@ class SettingsController extends BaseController {
     if (settings.length) {
       settings.map((setting) => (result[setting.key] = setting.value));
     }
-    console.log('result: ', result);
     return result;
   }
 }
